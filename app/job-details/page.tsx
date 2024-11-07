@@ -17,6 +17,7 @@ export default function JobDetailsPage() {
   const [jobDescription, setJobDescription] = useState("")
   const [resume, setResume] = useState("")
   const [resumePrompt, setResumePrompt] = useState("")
+  const [imageError, setImageError] = useState(false)
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -56,15 +57,22 @@ export default function JobDetailsPage() {
       <main className="container mx-auto py-8 pl-4">
         <div className="flex items-center mb-8">
           <div className="w-[100px] h-[100px] mr-6 relative">
-            <Image 
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Droider-dAdM6vbwN3OroOp0kCvDcjfJ4abzbc.webp"
-              alt="AI assistant robot reviewing job application documents at a desk" 
-              fill
-              priority
-              sizes="100px"
-              style={{ objectFit: 'cover' }}
-              className="rounded-lg shadow-lg"
-            />
+            {!imageError ? (
+              <Image 
+                src="/placeholder.svg?height=100&width=100"
+                alt="AI assistant robot reviewing job application documents at a desk" 
+                fill
+                priority
+                sizes="100px"
+                style={{ objectFit: 'cover' }}
+                className="rounded-lg shadow-lg"
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-200 rounded-lg shadow-lg flex items-center justify-center text-gray-500 text-xs text-center">
+                Image not available
+              </div>
+            )}
           </div>
           <div className="flex-1">
             <h2 className="text-3xl font-bold mb-4">Customize Your Job Application - In 3 Easy Steps!</h2>
