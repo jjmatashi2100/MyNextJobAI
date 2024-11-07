@@ -35,7 +35,12 @@ export default function JobDetailsPageClient() {
 
   const handleOptimize = (type: 'resume' | 'coverLetter' | 'interview') => {
     console.log(`Optimizing ${type}`)
-    // Implementation will be added in future updates
+    // Set placeholder content for testing
+    if (type === 'coverLetter') {
+      setCoverLetter('Your optimized cover letter will appear here...')
+    } else if (type === 'interview') {
+      setInterviewPrep('Your interview preparation content will appear here...')
+    }
   }
 
   return (
