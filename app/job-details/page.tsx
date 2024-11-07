@@ -8,6 +8,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Upload, Briefcase, FileSpreadsheet, MessageSquare } from 'lucide-react'
+import { useToast } from "@/components/ui/use-toast"
+import mammoth from 'mammoth'
+import * as pdfjs from 'pdfjs-dist'
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
 
 export default function JobDetailsPage() {
   const [companyName, setCompanyName] = useState("")
@@ -19,16 +24,93 @@ export default function JobDetailsPage() {
   const [coverLetterPrompt, setCoverLetterPrompt] = useState("")
   const [interviewPrep, setInterviewPrep] = useState("")
   const [interviewPrepPrompt, setInterviewPrepPrompt] = useState("")
+  const [uploadStatus, setUploadStatus] = useState("")
+  const { toast } = useToast()
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const content = e.target?.result as string
-        setResume(content.slice(0, 4000))
+    if (!file) return
+
+    if (file.size > 256 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload a file smaller than 256KB.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      const content = await convertFileToText(file)
+      const response = await fetch('/api/upload-resume', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to upload resume')
       }
-      reader.readAsText(file)
+
+      setUploadStatus("Success - Your Resume has been Uploaded")
+      toast({
+        title: "Resume Uploaded",
+        description: "Your resume has been successfully uploaded to Airtable.",
+      })
+    } catch (error) {
+      console.error('Error uploading resume:', error)
+      toast({
+        title: "Upload Failed",
+        description: "There was an error uploading your resume. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const convertFileToText = async (file: File): Promise<string> => {
+    const reader = new FileReader()
+    
+    if (file.type === 'application/pdf') {
+      return new Promise((resolve, reject) => {
+        reader.onload = async (e) => {
+          try {
+            const typedarray = new Uint8Array(e.target?.result as ArrayBuffer)
+            const pdf = await pdfjs.getDocument(typedarray).promise
+            let text = ''
+            for (let i = 1; i <= pdf.numPages; i++) {
+              const page = await pdf.getPage(i)
+              const content = await page.getTextContent()
+              text += content.items.map((item: any) => item.str).join(' ') + '\n'
+            }
+            resolve(text)
+          } catch (error) {
+            reject(error)
+          }
+        }
+        reader.readAsArrayBuffer(file)
+      })
+    } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+      return new Promise((resolve, reject) => {
+        reader.onload = async (e) => {
+          try {
+            const arrayBuffer = e.target?.result as ArrayBuffer
+            const result = await mammoth.extractRawText({ arrayBuffer })
+            resolve(result.value)
+          } catch (error) {
+            reject(error)
+          }
+        }
+        reader.readAsArrayBuffer(file)
+      })
+    } else {
+      // For plain text files
+      return new Promise((resolve, reject) => {
+        reader.onload = (e) => resolve(e.target?.result as string)
+        reader.onerror = (e) => reject(e)
+        reader.readAsText(file)
+      })
     }
   }
 
@@ -75,23 +157,26 @@ export default function JobDetailsPage() {
               <span className="text-red-600 font-bold">Start Here</span> - Import your resume to get started
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-4 flex justify-center items-center">
+          <CardContent className="p-4 flex flex-col justify-center items-center">
             <div className="w-full">
               <Input
                 type="file"
                 onChange={handleFileUpload}
                 className="hidden"
                 id="resume-upload"
-                accept=".pdf,.doc,.docx,.txt"
+                accept=".pdf,.doc,.docx,.txt,.rtf,.pages"
               />
               <Button
                 onClick={() => document.getElementById('resume-upload')?.click()}
-                className="bg-[#1A3A8F] text-white hover:bg-[#1A3A8F]/90 rounded-full px-8 py-6 text-xl font-semibold inline-flex items-center justify-center w-full max-w-md mx-auto"
+                className="bg-[#1A3A8F] text-white hover:bg-[#1A3A8F]/90 rounded-full px-6 py-4 text-lg font-semibold inline-flex items-center justify-center w-full max-w-md mx-auto"
               >
-                <Upload className="mr-3 h-7 w-7" />
-                Import Your Resume (Word, PDF, or TXT)
+                <Upload className="mr-2 h-6 w-6" />
+                Import Resume (PDF, Word, TXT, RTF, Pages)
               </Button>
             </div>
+            {uploadStatus && (
+              <p className="mt-4 text-green-600 font-semibold">{uploadStatus}</p>
+            )}
           </CardContent>
         </Card>
 
