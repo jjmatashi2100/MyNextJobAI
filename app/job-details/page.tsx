@@ -7,18 +7,17 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Upload, Briefcase, FileSpreadsheet, MessageSquare } from 'lucide-react'
 
-export default function JobDetailsPageClient() {
+export default function JobDetailsPage() {
   const [companyName, setCompanyName] = useState("")
   const [jobTitle, setJobTitle] = useState("")
   const [jobDescription, setJobDescription] = useState("")
-  const [resume, setResume] = useState<string>("")
+  const [resume, setResume] = useState("")
   const [resumePrompt, setResumePrompt] = useState("")
-  const [coverLetter, setCoverLetter] = useState<string>("")
+  const [coverLetter, setCoverLetter] = useState("")
   const [coverLetterPrompt, setCoverLetterPrompt] = useState("")
-  const [interviewPrep, setInterviewPrep] = useState<string>("")
+  const [interviewPrep, setInterviewPrep] = useState("")
   const [interviewPrepPrompt, setInterviewPrepPrompt] = useState("")
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,11 +34,12 @@ export default function JobDetailsPageClient() {
 
   const handleOptimize = (type: 'resume' | 'coverLetter' | 'interview') => {
     console.log(`Optimizing ${type}`)
-    // Set placeholder content for testing
-    if (type === 'coverLetter') {
-      setCoverLetter('Your optimized cover letter will appear here...')
+    if (type === 'resume') {
+      setResume('Your optimized resume will appear here...'.repeat(20).slice(0, 4000))
+    } else if (type === 'coverLetter') {
+      setCoverLetter('Your optimized cover letter will appear here...'.repeat(20).slice(0, 4000))
     } else if (type === 'interview') {
-      setInterviewPrep('Your interview preparation content will appear here...')
+      setInterviewPrep('Your interview preparation content will appear here...'.repeat(20).slice(0, 4000))
     }
   }
 
@@ -62,7 +62,7 @@ export default function JobDetailsPageClient() {
         </nav>
       </header>
 
-      <main className="container mx-auto py-8 pl-4">
+      <main className="container mx-auto py-8 px-4">
         <div className="mb-8">
           <h2 className="text-3xl font-bold mb-4">Customize Your Job Application - In 3 Easy Steps!</h2>
           <p className="text-[#666666] mb-0 text-xl">Let our AI-powered assistant help you create the perfect resume, cover letter, and interview prep for your dream job.</p>
@@ -103,7 +103,7 @@ export default function JobDetailsPageClient() {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-4">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="companyName" className="text-[#333333] mb-2 block">Company Name</Label>
@@ -135,7 +135,7 @@ export default function JobDetailsPageClient() {
                   Upload Job Information
                 </Button>
               </div>
-              <div className="col-span-2">
+              <div className="md:col-span-2">
                 <Label htmlFor="jobDescription" className="text-[#333333] mb-2 block">Job Description</Label>
                 <Textarea
                   id="jobDescription"
@@ -194,12 +194,15 @@ export default function JobDetailsPageClient() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-6">
-                    <div className="grid grid-cols-3 gap-6">
-                      <div className="col-span-2 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="md:col-span-2 space-y-4">
                         <h3 className="text-lg font-semibold">Targeted Resume</h3>
-                        <ScrollArea className="h-[500px] w-full rounded-md border border-[#666666] p-4">
-                          <div className="prose max-w-none whitespace-pre-wrap">{resume}</div>
-                        </ScrollArea>
+                        <Textarea 
+                          value={resume}
+                          onChange={(e) => setResume(e.target.value.slice(0, 4000))}
+                          className="h-[500px] w-full rounded-md border border-[#666666] p-4"
+                          placeholder="Your optimized resume will appear here..."
+                        />
                       </div>
                       <div className="space-y-4">
                         <h3 className="text-lg font-semibold">Optimization</h3>
@@ -209,7 +212,7 @@ export default function JobDetailsPageClient() {
                         <Textarea 
                           placeholder="Enter your prompt here" 
                           value={resumePrompt} 
-                          onChange={(e) => setResumePrompt(e.target.value)}
+                          onChange={(e) => setResumePrompt(e.target.value.slice(0, 500))}
                           className="border-[#666666] rounded-md"
                           rows={6}
                         />
@@ -244,12 +247,15 @@ export default function JobDetailsPageClient() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-6">
-                    <div className="grid grid-cols-3 gap-6">
-                      <div className="col-span-2 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="md:col-span-2 space-y-4">
                         <h3 className="text-lg font-semibold">Generated Cover Letter</h3>
-                        <ScrollArea className="h-[500px] w-full rounded-md border border-[#666666] p-4">
-                          <div className="prose max-w-none whitespace-pre-wrap">{coverLetter}</div>
-                        </ScrollArea>
+                        <Textarea 
+                          value={coverLetter}
+                          onChange={(e) => setCoverLetter(e.target.value.slice(0, 4000))}
+                          className="h-[500px] w-full rounded-md border border-[#666666] p-4"
+                          placeholder="Your generated cover letter will appear here..."
+                        />
                       </div>
                       <div className="space-y-4">
                         <h3 className="text-lg font-semibold">Customization</h3>
@@ -259,7 +265,7 @@ export default function JobDetailsPageClient() {
                         <Textarea 
                           placeholder="Enter your customization instructions here" 
                           value={coverLetterPrompt} 
-                          onChange={(e) => setCoverLetterPrompt(e.target.value)}
+                          onChange={(e) => setCoverLetterPrompt(e.target.value.slice(0, 500))}
                           className="border-[#666666] rounded-md"
                           rows={6}
                         />
@@ -294,12 +300,15 @@ export default function JobDetailsPageClient() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-6">
-                    <div className="grid grid-cols-3 gap-6">
-                      <div className="col-span-2 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="md:col-span-2 space-y-4">
                         <h3 className="text-lg font-semibold">Interview Questions and Answers</h3>
-                        <ScrollArea className="h-[500px] w-full rounded-md border border-[#666666] p-4">
-                          <div className="prose max-w-none whitespace-pre-wrap">{interviewPrep}</div>
-                        </ScrollArea>
+                        <Textarea 
+                          value={interviewPrep}
+                          onChange={(e) => setInterviewPrep(e.target.value.slice(0, 4000))}
+                          className="h-[500px] w-full rounded-md border border-[#666666] p-4"
+                          placeholder="Your interview preparation content will appear here..."
+                        />
                       </div>
                       <div className="space-y-4">
                         <h3 className="text-lg font-semibold">Customization</h3>
@@ -309,7 +318,7 @@ export default function JobDetailsPageClient() {
                         <Textarea 
                           placeholder="Enter your interview prep preferences here" 
                           value={interviewPrepPrompt} 
-                          onChange={(e) => setInterviewPrepPrompt(e.target.value)}
+                          onChange={(e) => setInterviewPrepPrompt(e.target.value.slice(0, 500))}
                           className="border-[#666666] rounded-md"
                           rows={6}
                         />
