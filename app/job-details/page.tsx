@@ -86,8 +86,8 @@ export default function JobDetailsPage() {
         <div className="flex items-center mb-8">
           <div className="w-[100px] h-[100px] mr-6">
             <Image 
-              src="/placeholder.svg"
-              alt="AI-powered job application assistant reviewing documents" 
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Droider-dAdM6vbwN3OroOp0kCvDcjfJ4abzbc.webp"
+              alt="AI assistant robot reviewing job application documents at a desk" 
               width={100}
               height={100}
               className="rounded-lg shadow-lg w-full h-full object-cover" 
