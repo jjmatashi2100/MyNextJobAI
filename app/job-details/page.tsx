@@ -52,6 +52,7 @@ export default function JobDetailsPage() {
 
   const handleFileUpload = (file: File) => {
     console.log(`File uploaded: ${file.name}`)
+    setImageError(false) // Reset image error state
     const reader = new FileReader()
     reader.onload = (e) => {
       setResume(e.target?.result as string)
@@ -86,23 +87,21 @@ export default function JobDetailsPage() {
       <main className="container mx-auto py-8 pl-4">
         <div className="flex items-center mb-8">
           <div className="w-[100px] h-[100px] mr-6 relative">
-            <Image 
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Droider-dAdM6vbwN3OroOp0kCvDcjfJ4abzbc.webp"
-              alt="AI assistant robot reviewing job application documents at a desk" 
-              fill
-              style={{ objectFit: 'cover' }}
-              className="rounded-lg shadow-lg"
-              onError={(e) => {
-                setImageError(true);
-                e.currentTarget.src = "/placeholder.svg?height=100&width=100";
-              }}
-            />
+            {!imageError ? (
+              <Image 
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Droider-dAdM6vbwN3OroOp0kCvDcjfJ4abzbc.webp"
+                alt="AI assistant robot reviewing job application documents at a desk" 
+                fill
+                style={{ objectFit: 'cover' }}
+                className="rounded-lg shadow-lg"
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-200 rounded-lg shadow-lg flex items-center justify-center text-gray-500 text-xs text-center">
+                Image not available
+              </div>
+            )}
           </div>
-          {imageError && (
-            <div className="w-[100px] h-[100px] mr-6 bg-gray-200 rounded-lg shadow-lg flex items-center justify-center text-gray-500 text-xs text-center">
-              Image not available
-            </div>
-          )}
           <div className="flex-1">
             <h2 className="text-3xl font-bold mb-4">Customize Your Job Application - In 3 Easy Steps!</h2>
             <p className="text-[#666666] mb-0 text-xl">Let our AI-powered assistant help you create the perfect resume, cover letter, and interview prep for your dream job.</p>
