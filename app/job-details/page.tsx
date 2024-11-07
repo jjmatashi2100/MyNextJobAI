@@ -1,129 +1,30 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import React, { useState, useRef } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Upload, Briefcase, FileSpreadsheet, MessageSquare } from 'lucide-react'
-import { useToast } from "@/components/ui/use-toast"
-import mammoth from 'mammoth'
-import * as pdfjs from 'pdfjs-dist'
-
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
 
 export default function JobDetailsPage() {
-  const [companyName, setCompanyName] = useState("")
-  const [jobTitle, setJobTitle] = useState("")
-  const [jobDescription, setJobDescription] = useState("")
-  const [resume, setResume] = useState("")
-  const [resumePrompt, setResumePrompt] = useState("")
-  const [coverLetter, setCoverLetter] = useState("")
-  const [coverLetterPrompt, setCoverLetterPrompt] = useState("")
-  const [interviewPrep, setInterviewPrep] = useState("")
-  const [interviewPrepPrompt, setInterviewPrepPrompt] = useState("")
-  const [uploadStatus, setUploadStatus] = useState("")
-  const { toast } = useToast()
+  const [fileName, setFileName] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    if (file.size > 256 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Please upload a file smaller than 256KB.",
-        variant: "destructive",
-      })
-      return
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setFileName(file.name);
+      // Here you would typically handle the file upload logic
+      console.log('File selected:', file.name);
     }
+  };
 
-    try {
-      const content = await convertFileToText(file)
-      const response = await fetch('/api/upload-resume', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to upload resume')
-      }
-
-      setUploadStatus("Success - Your Resume has been Uploaded")
-      toast({
-        title: "Resume Uploaded",
-        description: "Your resume has been successfully uploaded to Airtable.",
-      })
-    } catch (error) {
-      console.error('Error uploading resume:', error)
-      toast({
-        title: "Upload Failed",
-        description: "There was an error uploading your resume. Please try again.",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const convertFileToText = async (file: File): Promise<string> => {
-    const reader = new FileReader()
-    
-    if (file.type === 'application/pdf') {
-      return new Promise((resolve, reject) => {
-        reader.onload = async (e) => {
-          try {
-            const typedarray = new Uint8Array(e.target?.result as ArrayBuffer)
-            const pdf = await pdfjs.getDocument(typedarray).promise
-            let text = ''
-            for (let i = 1; i <= pdf.numPages; i++) {
-              const page = await pdf.getPage(i)
-              const content = await page.getTextContent()
-              text += content.items.map((item: any) => item.str).join(' ') + '\n'
-            }
-            resolve(text)
-          } catch (error) {
-            reject(error)
-          }
-        }
-        reader.readAsArrayBuffer(file)
-      })
-    } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-      return new Promise((resolve, reject) => {
-        reader.onload = async (e) => {
-          try {
-            const arrayBuffer = e.target?.result as ArrayBuffer
-            const result = await mammoth.extractRawText({ arrayBuffer })
-            resolve(result.value)
-          } catch (error) {
-            reject(error)
-          }
-        }
-        reader.readAsArrayBuffer(file)
-      })
-    } else {
-      // For plain text files
-      return new Promise((resolve, reject) => {
-        reader.onload = (e) => resolve(e.target?.result as string)
-        reader.onerror = (e) => reject(e)
-        reader.readAsText(file)
-      })
-    }
-  }
-
-  const handleOptimize = (type: 'resume' | 'coverLetter' | 'interview') => {
-    console.log(`Optimizing ${type}`)
-    if (type === 'resume') {
-      setResume('Your optimized resume will appear here...'.repeat(20).slice(0, 4000))
-    } else if (type === 'coverLetter') {
-      setCoverLetter('Your optimized cover letter will appear here...'.repeat(20).slice(0, 4000))
-    } else if (type === 'interview') {
-      setInterviewPrep('Your interview preparation content will appear here...'.repeat(20).slice(0, 4000))
-    }
-  }
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
 
   return (
     <div className="min-h-screen bg-white text-[#333333]">
@@ -161,22 +62,24 @@ export default function JobDetailsPage() {
             <div className="w-full">
               <Input
                 type="file"
+                ref={fileInputRef}
                 onChange={handleFileUpload}
                 className="hidden"
-                id="resume-upload"
-                accept=".pdf,.doc,.docx,.txt,.rtf,.pages"
+                accept=".doc,.docx,.pdf,.txt,.rtf"
               />
               <Button
-                onClick={() => document.getElementById('resume-upload')?.click()}
+                onClick={handleImportClick}
                 className="bg-[#1A3A8F] text-white hover:bg-[#1A3A8F]/90 rounded-full px-6 py-4 text-lg font-semibold inline-flex items-center justify-center w-full max-w-md mx-auto"
               >
-                <Upload className="mr-2 h-6 w-6" />
-                Import Resume (PDF, Word, TXT, RTF, Pages)
+                <Upload className="mr-3 h-6 w-6" />
+                Import Your Resume (Word, PDF, TXT, or RTF)
               </Button>
+              {fileName && (
+                <p className="mt-2 text-center text-sm text-gray-600">
+                  Selected file: {fileName}
+                </p>
+              )}
             </div>
-            {uploadStatus && (
-              <p className="mt-4 text-green-600 font-semibold">{uploadStatus}</p>
-            )}
           </CardContent>
         </Card>
 
@@ -194,27 +97,20 @@ export default function JobDetailsPage() {
                   <Label htmlFor="companyName" className="text-[#333333] mb-2 block">Company Name</Label>
                   <Input
                     id="companyName"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value.slice(0, 128))}
                     className="border-[#666666] rounded-md"
                     placeholder="Enter company name"
-                    maxLength={128}
                   />
                 </div>
                 <div>
                   <Label htmlFor="jobTitle" className="text-[#333333] mb-2 block">Job Title</Label>
                   <Input
                     id="jobTitle"
-                    value={jobTitle}
-                    onChange={(e) => setJobTitle(e.target.value.slice(0, 128))}
                     className="border-[#666666] rounded-md"
                     placeholder="Enter job title"
-                    maxLength={128}
                   />
                 </div>
                 <Button 
                   className="bg-[#1A3A8F] text-white hover:bg-[#1A3A8F]/90 rounded-full px-8 py-6 text-xl font-semibold inline-flex items-center justify-center w-full"
-                  onClick={() => console.log("Job Information Uploaded")}
                 >
                   <Upload className="mr-3 h-7 w-7" />
                   Upload Job Information
@@ -224,11 +120,8 @@ export default function JobDetailsPage() {
                 <Label htmlFor="jobDescription" className="text-[#333333] mb-2 block">Job Description</Label>
                 <Textarea
                   id="jobDescription"
-                  value={jobDescription}
-                  onChange={(e) => setJobDescription(e.target.value.slice(0, 2000))}
                   className="border-[#666666] rounded-md h-[200px]"
                   placeholder="Copy and paste your target job description here"
-                  maxLength={2000}
                 />
               </div>
             </div>
@@ -283,8 +176,6 @@ export default function JobDetailsPage() {
                       <div className="md:col-span-2 space-y-4">
                         <h3 className="text-lg font-semibold">Targeted Resume</h3>
                         <Textarea 
-                          value={resume}
-                          onChange={(e) => setResume(e.target.value.slice(0, 4000))}
                           className="h-[500px] w-full rounded-md border border-[#666666] p-4"
                           placeholder="Your optimized resume will appear here..."
                         />
@@ -296,13 +187,10 @@ export default function JobDetailsPage() {
                         </p>
                         <Textarea 
                           placeholder="Enter your prompt here" 
-                          value={resumePrompt} 
-                          onChange={(e) => setResumePrompt(e.target.value.slice(0, 500))}
                           className="border-[#666666] rounded-md"
                           rows={6}
                         />
                         <Button 
-                          onClick={() => handleOptimize('resume')} 
                           className="bg-[#1A3A8F] text-white hover:bg-[#1A3A8F]/90 rounded-full px-4 py-2 text-lg font-medium"
                         >
                           Optimize Resume
@@ -336,8 +224,6 @@ export default function JobDetailsPage() {
                       <div className="md:col-span-2 space-y-4">
                         <h3 className="text-lg font-semibold">Generated Cover Letter</h3>
                         <Textarea 
-                          value={coverLetter}
-                          onChange={(e) => setCoverLetter(e.target.value.slice(0, 4000))}
                           className="h-[500px] w-full rounded-md border border-[#666666] p-4"
                           placeholder="Your generated cover letter will appear here..."
                         />
@@ -349,13 +235,10 @@ export default function JobDetailsPage() {
                         </p>
                         <Textarea 
                           placeholder="Enter your customization instructions here" 
-                          value={coverLetterPrompt} 
-                          onChange={(e) => setCoverLetterPrompt(e.target.value.slice(0, 500))}
                           className="border-[#666666] rounded-md"
                           rows={6}
                         />
                         <Button 
-                          onClick={() => handleOptimize('coverLetter')} 
                           className="bg-[#1A3A8F] text-white hover:bg-[#1A3A8F]/90 rounded-full px-4 py-2 text-lg font-medium"
                         >
                           Generate Cover Letter
@@ -389,8 +272,6 @@ export default function JobDetailsPage() {
                       <div className="md:col-span-2 space-y-4">
                         <h3 className="text-lg font-semibold">Interview Questions and Answers</h3>
                         <Textarea 
-                          value={interviewPrep}
-                          onChange={(e) => setInterviewPrep(e.target.value.slice(0, 4000))}
                           className="h-[500px] w-full rounded-md border border-[#666666] p-4"
                           placeholder="Your interview preparation content will appear here..."
                         />
@@ -402,13 +283,10 @@ export default function JobDetailsPage() {
                         </p>
                         <Textarea 
                           placeholder="Enter your interview prep preferences here" 
-                          value={interviewPrepPrompt} 
-                          onChange={(e) => setInterviewPrepPrompt(e.target.value.slice(0, 500))}
                           className="border-[#666666] rounded-md"
                           rows={6}
                         />
                         <Button 
-                          onClick={() => handleOptimize('interview')} 
                           className="bg-[#1A3A8F] text-white hover:bg-[#1A3A8F]/90 rounded-full px-4 py-2 text-lg font-medium"
                         >
                           Generate Interview Prep
