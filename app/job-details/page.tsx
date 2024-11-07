@@ -10,19 +10,24 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Upload, Briefcase, FileSpreadsheet, MessageSquare } from 'lucide-react'
 
-export default function JobDetailsPage() {
+export default function JobDetailsPageClient() {
   const [companyName, setCompanyName] = useState("")
   const [jobTitle, setJobTitle] = useState("")
   const [jobDescription, setJobDescription] = useState("")
-  const [resume, setResume] = useState("")
+  const [resume, setResume] = useState<string>("")
   const [resumePrompt, setResumePrompt] = useState("")
+  const [coverLetter, setCoverLetter] = useState<string>("")
+  const [coverLetterPrompt, setCoverLetterPrompt] = useState("")
+  const [interviewPrep, setInterviewPrep] = useState<string>("")
+  const [interviewPrepPrompt, setInterviewPrepPrompt] = useState("")
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
       const reader = new FileReader()
       reader.onload = (e) => {
-        setResume(e.target?.result as string)
+        const content = e.target?.result as string
+        setResume(content.slice(0, 4000))
       }
       reader.readAsText(file)
     }
@@ -100,9 +105,10 @@ export default function JobDetailsPage() {
                   <Input
                     id="companyName"
                     value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
+                    onChange={(e) => setCompanyName(e.target.value.slice(0, 128))}
                     className="border-[#666666] rounded-md"
                     placeholder="Enter company name"
+                    maxLength={128}
                   />
                 </div>
                 <div>
@@ -110,9 +116,10 @@ export default function JobDetailsPage() {
                   <Input
                     id="jobTitle"
                     value={jobTitle}
-                    onChange={(e) => setJobTitle(e.target.value)}
+                    onChange={(e) => setJobTitle(e.target.value.slice(0, 128))}
                     className="border-[#666666] rounded-md"
                     placeholder="Enter job title"
+                    maxLength={128}
                   />
                 </div>
                 <Button 
@@ -128,9 +135,10 @@ export default function JobDetailsPage() {
                 <Textarea
                   id="jobDescription"
                   value={jobDescription}
-                  onChange={(e) => setJobDescription(e.target.value)}
+                  onChange={(e) => setJobDescription(e.target.value.slice(0, 2000))}
                   className="border-[#666666] rounded-md h-[200px]"
                   placeholder="Copy and paste your target job description here"
+                  maxLength={2000}
                 />
               </div>
             </div>
@@ -185,7 +193,7 @@ export default function JobDetailsPage() {
                       <div className="col-span-2 space-y-4">
                         <h3 className="text-lg font-semibold">Targeted Resume</h3>
                         <ScrollArea className="h-[500px] w-full rounded-md border border-[#666666] p-4">
-                          <div dangerouslySetInnerHTML={{ __html: resume }} className="prose max-w-none" />
+                          <div className="prose max-w-none whitespace-pre-wrap">{resume}</div>
                         </ScrollArea>
                       </div>
                       <div className="space-y-4">
@@ -205,6 +213,106 @@ export default function JobDetailsPage() {
                           className="bg-[#1A3A8F] text-white hover:bg-[#1A3A8F]/90 rounded-full px-4 py-2 text-lg font-medium"
                         >
                           Optimize Resume
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-start p-6 bg-[#F5F5F5] space-x-4">
+                    <Button className="rounded-full bg-[#2B579A] text-white hover:bg-[#2B579A]/90 px-6 py-3">
+                      <span className="text-lg font-bold">Download as Word</span>
+                    </Button>
+                    <Button className="rounded-full bg-[#CC0000] text-white hover:bg-[#CC0000]/90 px-6 py-3">
+                      <span className="text-lg font-bold">Download as PDF</span>
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </TabsContent>
+              <TabsContent value="coverLetter">
+                <Card className="shadow-lg">
+                  <CardHeader className="bg-[#E6EAF5]">
+                    <CardTitle className="text-xl flex items-center">
+                      <FileSpreadsheet className="mr-2 h-6 w-6 text-[#1A3A8F]" />
+                      Cover Letter Generation
+                    </CardTitle>
+                    <CardDescription className="text-[#666666]">
+                      Create a personalized cover letter that showcases your enthusiasm and qualifications for the role
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <div className="grid grid-cols-3 gap-6">
+                      <div className="col-span-2 space-y-4">
+                        <h3 className="text-lg font-semibold">Generated Cover Letter</h3>
+                        <ScrollArea className="h-[500px] w-full rounded-md border border-[#666666] p-4">
+                          <div className="prose max-w-none whitespace-pre-wrap">{coverLetter}</div>
+                        </ScrollArea>
+                      </div>
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">Customization</h3>
+                        <p className="text-sm text-[#666666]">
+                          Provide additional details or preferences for your cover letter. Mention specific achievements or skills you want to emphasize.
+                        </p>
+                        <Textarea 
+                          placeholder="Enter your customization instructions here" 
+                          value={coverLetterPrompt} 
+                          onChange={(e) => setCoverLetterPrompt(e.target.value)}
+                          className="border-[#666666] rounded-md"
+                          rows={6}
+                        />
+                        <Button 
+                          onClick={() => handleOptimize('coverLetter')} 
+                          className="bg-[#1A3A8F] text-white hover:bg-[#1A3A8F]/90 rounded-full px-4 py-2 text-lg font-medium"
+                        >
+                          Generate Cover Letter
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-start p-6 bg-[#F5F5F5] space-x-4">
+                    <Button className="rounded-full bg-[#2B579A] text-white hover:bg-[#2B579A]/90 px-6 py-3">
+                      <span className="text-lg font-bold">Download as Word</span>
+                    </Button>
+                    <Button className="rounded-full bg-[#CC0000] text-white hover:bg-[#CC0000]/90 px-6 py-3">
+                      <span className="text-lg font-bold">Download as PDF</span>
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </TabsContent>
+              <TabsContent value="interview">
+                <Card className="shadow-lg">
+                  <CardHeader className="bg-[#E6EAF5]">
+                    <CardTitle className="text-xl flex items-center">
+                      <MessageSquare className="mr-2 h-6 w-6 text-[#1A3A8F]" />
+                      Interview Preparation
+                    </CardTitle>
+                    <CardDescription className="text-[#666666]">
+                      Prepare for your interview with tailored questions and suggested responses based on the job description
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <div className="grid grid-cols-3 gap-6">
+                      <div className="col-span-2 space-y-4">
+                        <h3 className="text-lg font-semibold">Interview Questions and Answers</h3>
+                        <ScrollArea className="h-[500px] w-full rounded-md border border-[#666666] p-4">
+                          <div className="prose max-w-none whitespace-pre-wrap">{interviewPrep}</div>
+                        </ScrollArea>
+                      </div>
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">Customization</h3>
+                        <p className="text-sm text-[#666666]">
+                          Specify any areas you want to focus on or particular types of questions you'd like to prepare for.
+                        </p>
+                        <Textarea 
+                          placeholder="Enter your interview prep preferences here" 
+                          value={interviewPrepPrompt} 
+                          onChange={(e) => setInterviewPrepPrompt(e.target.value)}
+                          className="border-[#666666] rounded-md"
+                          rows={6}
+                        />
+                        <Button 
+                          onClick={() => handleOptimize('interview')} 
+                          className="bg-[#1A3A8F] text-white hover:bg-[#1A3A8F]/90 rounded-full px-4 py-2 text-lg font-medium"
+                        >
+                          Generate Interview Prep
                         </Button>
                       </div>
                     </div>
