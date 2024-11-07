@@ -46,12 +46,16 @@ export default function JobDetailsPage() {
   const [companyName, setCompanyName] = useState("")
   const [jobTitle, setJobTitle] = useState("")
   const [jobDescription, setJobDescription] = useState("")
-  const [resume, setResume] = useState("")
+  const [resume, setResume] = useState<string>("")
   const [resumePrompt, setResumePrompt] = useState("")
 
   const handleFileUpload = (file: File) => {
     console.log(`File uploaded: ${file.name}`)
-    // Implementation will be added in future updates
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setResume(e.target?.result as string)
+    }
+    reader.readAsText(file)
   }
 
   const handleOptimize = (type: 'resume' | 'coverLetter' | 'interview') => {
